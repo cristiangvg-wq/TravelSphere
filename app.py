@@ -6,6 +6,10 @@ from urllib.parse import quote_plus
 
 from travelsphere.data import build_demo_results
 from travelsphere.utils import money, search_url, duration_days
+from travelsphere.providers import (
+    ProviderError, amadeus_configured, google_places_configured,
+    search_flights, search_hotels, search_restaurants,
+)
 
 st.set_page_config(page_title="TravelSphere · Your journey, reimagined", page_icon="✦", layout="wide", initial_sidebar_state="collapsed")
 
@@ -74,8 +78,51 @@ if trip["return_date"] < trip["departure"]:
     st.error("Revisa las fechas del viaje."); st.stop()
 
 nights = max(1, duration_days(trip["departure"],trip["return_date"]))
-results = build_demo_results(trip, nights)
 people = int(trip["adults"]+trip["children"])
+source_mode = st.radio(
+    "Fuente de resultados",
+    ["Demostración", "APIs conectadas"],
+    horizontal=True,
+    help="Las APIs requieren credenciales en Streamlit Secrets o variables de entorno.",
+)
+results = build_demo_results(trip, nights)
+
+if source_mode == "APIs conectadas":
+    active_sources = []
+    if amadeus_configured():
+        for label, fetcher, key in [
+            ("vuelos", lambda: search_flights(trip), "flights"),
+            ("hoteles", lambda: search_hotels(trip), "hotels"),
+        ]:
+            try:
+                live_items = fetcher()
+                if live_items:
+                    results[key] = live_items
+                    active_sources.append(label)
+                else:
+                    st.info(f"Amadeus no devolvió opciones de {label}; se conservan los datos de demostración.")
+            except ProviderError as exc:
+                st.warning(f"No se pudieron consultar {label} con Amadeus: {exc} Se conservan los datos de demostración.")
+    else:
+        st.info("Para consultar vuelos y hoteles, configura AMADEUS_CLIENT_ID y AMADEUS_CLIENT_SECRET en los secretos de la app.")
+
+    if google_places_configured():
+        try:
+            live_restaurants = search_restaurants(trip["destination"])
+            if live_restaurants:
+                results["restaurants"] = live_restaurants
+                active_sources.append("restaurantes")
+            else:
+                st.info("Google Places no devolvió restaurantes; se conservan los datos de demostración.")
+        except ProviderError as exc:
+            st.warning(f"No se pudieron consultar restaurantes con Google Places: {exc} Se conservan los datos de demostración.")
+    else:
+        st.info("Para consultar restaurantes, configura GOOGLE_PLACES_API_KEY en los secretos de la app.")
+
+    if active_sources:
+        st.success("Resultados consultados por API: " + ", ".join(active_sources) + ". Revisa moneda, condiciones y disponibilidad en el proveedor.")
+    else:
+        st.warning("No se obtuvieron resultados de API. La aplicación sigue funcionando con datos de demostración.")
 
 st.markdown("<div style='height:1rem'></div>",unsafe_allow_html=True)
 st.markdown(f"<div class='eyebrow'>YOUR JOURNEY AT A GLANCE</div><h2>{trip['origin']} <span style='color:#7ce7f2'>→</span> {trip['destination']}</h2>",unsafe_allow_html=True)
@@ -129,10 +176,10 @@ with tabs[2]:
     for x in results['restaurants']:
         if cuisine!="Todas" and x['cuisine'] not in [cuisine,"Local"]: continue
         if price_level!="Todos" and x['price_level']!=price_level: continue
-        st.markdown(f"<div class='glass'><span class='pill'>{x['cuisine']}</span><span class='pill'>{x['price_level']}</span><span class='pill'>★ {x['rating']}</span><div class='card-title'>{x['name']}</div><div class='muted'>{x['description']}</div><div class='card-price'>{money(x['avg_cost']*people,trip['currency'])} <small>estimado para {people} personas</small></div></div>",unsafe_allow_html=True)
+        st.markdown(f"<div class='glass'><span class='pill'>{x['cuisine']}</span><span class='pill'>{x['price_level']}</span><span class='pill'>★ {x['rating']}</span><div class='card-title'>{x['name']}</div><div class='muted'>{x['description']}</div><div class='card-price'>{money(x['avg_cost']*people,trip['currency']) if x.get('avg_cost', 0) else "Precio no disponible"} <small>{("estimado para "+str(people)+" personas") if x.get('avg_cost', 0) else "consulta el menú del restaurante"}</small></div></div>",unsafe_allow_html=True)
         q=quote_plus(f"{x['name']} {trip['destination']}")
         c1,c2=st.columns(2)
-        with c1: st.link_button("Google Maps ↗",f"https://www.google.com/maps/search/?api=1&query={q}")
+        with c1: st.link_button("Google Maps ↗",x.get("maps_url") or f"https://www.google.com/maps/search/?api=1&query={q}")
         with c2: st.link_button("Tripadvisor ↗",f"https://www.tripadvisor.com/Search?q={q}")
 
 with tabs[3]:
