@@ -176,7 +176,7 @@ with tabs[2]:
     for x in results['restaurants']:
         if cuisine!="Todas" and x['cuisine'] not in [cuisine,"Local"]: continue
         if price_level!="Todos" and x['price_level']!=price_level: continue
-        st.markdown(f"<div class='glass'><span class='pill'>{x['cuisine']}</span><span class='pill'>{x['price_level']}</span><span class='pill'>★ {x['rating']}</span><div class='card-title'>{x['name']}</div><div class='muted'>{x['description']}</div><div class='card-price'>{money(x['avg_cost']*people,trip['currency']) if x.get('avg_cost', 0) else "Precio no disponible"} <small>{("estimado para "+str(people)+" personas") if x.get('avg_cost', 0) else "consulta el menú del restaurante"}</small></div></div>",unsafe_allow_html=True)
+        st.markdown(f"<div class='glass'><span class='pill'>{x['cuisine']}</span><span class='pill'>{x['price_level']}</span><span class='pill'>★ {x['rating']}</span><div class='card-title'>{x['name']}</div><div class='muted'>{x['description']}</div><div class='card-price'>{money(x['avg_cost']*people,trip['currency']) if x.get('avg_cost', 0) else 'Precio no disponible'} <small>{('estimado para '+str(people)+' personas') if x.get('avg_cost', 0) else 'consulta el menú del restaurante'}</small></div></div>",unsafe_allow_html=True)
         q=quote_plus(f"{x['name']} {trip['destination']}")
         c1,c2=st.columns(2)
         with c1: st.link_button("Google Maps ↗",x.get("maps_url") or f"https://www.google.com/maps/search/?api=1&query={q}")
