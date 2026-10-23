@@ -14,6 +14,39 @@ AMAD_BASE = os.getenv("AMADEUS_BASE_URL", "https://test.api.amadeus.com").rstrip
 GOOGLE_PLACES_URL = "https://places.googleapis.com/v1/places:searchText"
 TIMEOUT = (4, 18)
 
+# Friendly fallbacks in case the provider omits its carrier dictionary.
+AIRLINE_NAMES = {
+    "AV": "Avianca",
+    "LA": "LATAM Airlines",
+    "4C": "LATAM Airlines Colombia",
+    "CM": "Copa Airlines",
+    "AM": "Aeroméxico",
+    "AR": "Aerolíneas Argentinas",
+    "UA": "United Airlines",
+    "AA": "American Airlines",
+    "DL": "Delta Air Lines",
+    "IB": "Iberia",
+    "AF": "Air France",
+    "KL": "KLM",
+    "AC": "Air Canada",
+    "BA": "British Airways",
+    "LH": "Lufthansa",
+    "UX": "Air Europa",
+    "NK": "Spirit Airlines",
+    "B6": "JetBlue",
+    "WN": "Southwest Airlines",
+}
+
+
+def airline_display_name(carrier_code: str, carriers: dict[str, str] | None = None) -> str:
+    """Return a readable carrier name even when Amadeus omits its dictionary."""
+    code = str(carrier_code or "").strip().upper()
+    if carriers and carriers.get(code):
+        return str(carriers[code])
+    if code in AIRLINE_NAMES:
+        return AIRLINE_NAMES[code]
+    return f"Aerolínea ({code})" if code else "Aerolínea no identificada"
+
 
 class ProviderError(RuntimeError):
     """A provider request failed or returned an unexpected response."""
@@ -134,7 +167,7 @@ def search_flights(trip: dict[str, Any], limit: int = 5) -> list[dict[str, Any]]
             continue
         carrier = first_segments[0].get("carrierCode", "N/D")
         results.append({
-            "airline": carriers.get(carrier, carrier),
+            "airline": airline_display_name(carrier, carriers),
             "stops": "Directo" if len(first_segments) == 1 else ("1 escala" if len(first_segments) == 2 else "2+ escalas"),
             "depart": first_segments[0].get("departure", {}).get("at", "")[11:16] or "N/D",
             "arrive": first_segments[-1].get("arrival", {}).get("at", "")[11:16] or "N/D",
