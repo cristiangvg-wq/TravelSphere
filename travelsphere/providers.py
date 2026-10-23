@@ -103,19 +103,19 @@ def search_flights(trip: dict[str, Any], limit: int = 5) -> list[dict[str, Any]]
     destination = resolve_city_code(str(trip.get("destination", "")))
     if not origin or not destination:
         raise ProviderError("No se pudo resolver origen/destino a códigos IATA de ciudad.")
-    payload = _amadeus_get(
-        "/v2/shopping/flight-offers",
-        {
-            "originLocationCode": origin,
-            "destinationLocationCode": destination,
-            "departureDate": trip["departure"].isoformat(),
-            "returnDate": trip["return_date"].isoformat(),
-            "adults": int(trip.get("adults", 1)),
-            "children": int(trip.get("children", 0)),
-            "currencyCode": "COP",
-            "max": max(1, min(int(limit), 10)),
-        },
-    )
+    params = {
+        "originLocationCode": origin,
+        "destinationLocationCode": destination,
+        "departureDate": trip["departure"].isoformat(),
+        "returnDate": trip["return_date"].isoformat(),
+        "adults": max(1, int(trip.get("adults", 1))),
+        "currencyCode": "COP",
+        "max": max(1, min(int(limit), 10)),
+    }
+    children = int(trip.get("children", 0))
+    if children > 0:
+        params["children"] = children
+    payload = _amadeus_get("/v2/shopping/flight-offers", params)
     results = []
     dictionaries = payload.get("dictionaries", {})
     carriers = dictionaries.get("carriers", {})
@@ -135,7 +135,7 @@ def search_flights(trip: dict[str, Any], limit: int = 5) -> list[dict[str, Any]]
         carrier = first_segments[0].get("carrierCode", "N/D")
         results.append({
             "airline": carriers.get(carrier, carrier),
-            "stops": "Directo" if len(first_segments) == 1 else f"{len(first_segments)-1} escala",
+            "stops": "Directo" if len(first_segments) == 1 else ("1 escala" if len(first_segments) == 2 else "2+ escalas"),
             "depart": first_segments[0].get("departure", {}).get("at", "")[11:16] or "N/D",
             "arrive": first_segments[-1].get("arrival", {}).get("at", "")[11:16] or "N/D",
             "duration": itineraries[0].get("duration", "N/D").replace("PT", "").lower(),
