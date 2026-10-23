@@ -47,3 +47,39 @@ TravelSphere/
 - Ajusta el estilo CSS incluido en `app.py`.
 - Sustituye `build_demo_results()` en `travelsphere/data.py` por funciones de servicio conectadas a proveedores autorizados.
 - Añade tests y un archivo de bloqueo de dependencias para despliegues reproducibles.
+
+
+## Conectar proveedores de datos
+
+La aplicación permite elegir **Demostración** o **APIs conectadas**. Sin credenciales, las pantallas siguen funcionando con datos de ejemplo; no se hacen llamadas externas.
+
+### Amadeus (vuelos y hoteles)
+
+1. Crea credenciales en [Amadeus for Developers](https://developers.amadeus.com/).
+2. Añade estas variables a `.streamlit/secrets.toml` en local o a **App settings → Secrets** en Streamlit Community Cloud:
+
+```toml
+AMADEUS_CLIENT_ID = "tu_client_id"
+AMADEUS_CLIENT_SECRET = "tu_client_secret"
+AMADEUS_BASE_URL = "https://test.api.amadeus.com"
+```
+
+El entorno de pruebas puede devolver datos limitados o de prueba. Usa la URL de producción únicamente con credenciales de producción habilitadas por Amadeus.
+
+### Google Places (restaurantes)
+
+Activa Places API (New) en tu proyecto de Google Cloud y añade:
+
+```toml
+GOOGLE_PLACES_API_KEY = "tu_api_key"
+```
+
+Restringe la clave por API y, cuando corresponda, por aplicación. Google Places no proporciona necesariamente precios de menú; en ese caso TravelSphere muestra **Precio no disponible** en vez de inventar un costo.
+
+### Comportamiento y límites
+
+- Cada proveedor es opcional y se consulta solo si eliges **APIs conectadas** y sus credenciales están configuradas.
+- Si una consulta falla o no devuelve resultados, la aplicación muestra un aviso y conserva los datos de demostración para esa sección.
+- Los resultados de proveedores están sujetos a cobertura, límites, permisos y condiciones de cada API. Confirma siempre la oferta y disponibilidad en el proveedor.
+- Las cifras del resumen financiero y el itinerario siguen siendo estimaciones de demostración; no son una cotización integral del viaje.
+- No guardes credenciales en Git. `.streamlit/secrets.toml` está excluido mediante `.gitignore`.
