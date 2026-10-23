@@ -1,4 +1,19 @@
 from travelsphere import providers
+from travelsphere.data import build_demo_results
+
+
+def test_demo_flights_have_visible_example_airline_names():
+    trip = {
+        "destination": "Ciudad de México, México",
+        "adults": 1,
+        "children": 0,
+    }
+    flights = build_demo_results(trip, 2)["flights"]
+    assert [flight["airline"] for flight in flights] == [
+        "Avianca (ejemplo)",
+        "Aeroméxico (ejemplo)",
+        "Copa Airlines (ejemplo)",
+    ]
 
 
 def test_resolve_city_code_uses_city_part_and_returns_iata(monkeypatch):
@@ -26,7 +41,6 @@ def test_empty_city_does_not_call_provider(monkeypatch):
 
     monkeypatch.setattr(providers, "_amadeus_get", unexpected_call)
     assert providers.resolve_city_code("  ") is None
-
 
 
 def test_airline_display_name_uses_provider_dictionary():
