@@ -147,7 +147,12 @@ with tabs[0]:
     if not shown: st.warning("No hay opciones con esos filtros. Prueba ampliarlos.")
     for x in shown:
         a,b = st.columns([4,1])
-        with a: st.markdown(f"<div class='glass'><span class='pill'>{x['airline']}</span><span class='pill'>{x['stops']}</span><div class='card-title'>{x['depart']} → {x['arrive']}</div><div class='muted'>{x['duration']} · {x['baggage']}</div><div class='card-price'>{money(x['price']*people,trip['currency'])} <small>ida y vuelta · grupo</small></div></div>",unsafe_allow_html=True)
+        with a:
+            airline_label = str(x.get("airline") or x.get("carrier") or x.get("carrierCode") or "Aerolínea no identificada")
+            # Render the airline name as normal Streamlit text so it stays visible
+            # even if the custom HTML badge is styled unexpectedly.
+            st.markdown(f"**✈️ {airline_label}**")
+            st.markdown(f"<div class='glass'><span class='pill'>{x.get('stops', 'Escalas no disponibles')}</span><div class='card-title'>{x.get('depart', 'N/D')} → {x.get('arrive', 'N/D')}</div><div class='muted'>{x.get('duration', 'Duración no disponible')} · {x.get('baggage', 'Equipaje por confirmar')}</div><div class='card-price'>{money(x['price']*people,trip['currency'])} <small>ida y vuelta · grupo</small></div></div>",unsafe_allow_html=True)
         with b:
             st.write("")
             st.link_button("Kayak ↗",search_url("kayak",trip))
