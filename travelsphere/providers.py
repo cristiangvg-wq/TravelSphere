@@ -88,7 +88,7 @@ def resolve_city_code(keyword: str) -> str | None:
         return None
     payload = _amadeus_get(
         "/v1/reference-data/locations",
-        {"keyword": keyword.strip(), "subType": "CITY", "page[limit]": 5},
+        {"keyword": keyword.split(",")[0].strip(), "subType": "CITY", "page[limit]": 5},
     )
     for item in payload.get("data", []):
         code = item.get("iataCode")
