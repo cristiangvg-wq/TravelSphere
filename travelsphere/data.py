@@ -4,10 +4,11 @@ def build_demo_results(trip: dict, nights: int) -> dict:
     destination = trip["destination"]
     people = int(trip["adults"] + trip["children"])
     # All prices below are illustrative COP values, not live quotes.
+    # Airline names are examples only; these are not real offers or schedules.
     flights = [
-        {"airline":"Aerolínea demo A","stops":"Directo","depart":"08:15","arrive":"12:05","duration":"3 h 50 min","baggage":"Equipaje de mano","price":920000},
-        {"airline":"Aerolínea demo B","stops":"1 escala","depart":"06:40","arrive":"13:20","duration":"6 h 40 min","baggage":"Equipaje de mano + artículo personal","price":690000},
-        {"airline":"Aerolínea demo C","stops":"2+ escalas","depart":"14:10","arrive":"23:35","duration":"9 h 25 min","baggage":"Artículo personal","price":540000},
+        {"airline":"Avianca (ejemplo)","stops":"Directo","depart":"08:15","arrive":"12:05","duration":"3 h 50 min","baggage":"Equipaje de mano","price":920000},
+        {"airline":"Aeroméxico (ejemplo)","stops":"1 escala","depart":"06:40","arrive":"13:20","duration":"6 h 40 min","baggage":"Equipaje de mano + artículo personal","price":690000},
+        {"airline":"Copa Airlines (ejemplo)","stops":"2+ escalas","depart":"14:10","arrive":"23:35","duration":"9 h 25 min","baggage":"Artículo personal","price":540000},
     ]
     hotels = [
         {"name":"Nómada Urban Stay","kind":"Boutique","rating":"4.7","area":"Zona céntrica","amenities":["Wi-Fi","Desayuno","Recepción 24 h"],"nightly":310000},
