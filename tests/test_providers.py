@@ -26,3 +26,14 @@ def test_empty_city_does_not_call_provider(monkeypatch):
 
     monkeypatch.setattr(providers, "_amadeus_get", unexpected_call)
     assert providers.resolve_city_code("  ") is None
+
+
+
+def test_airline_display_name_uses_provider_dictionary():
+    assert providers.airline_display_name("AV", {"AV": "Avianca S.A."}) == "Avianca S.A."
+
+
+def test_airline_display_name_has_friendly_fallbacks():
+    assert providers.airline_display_name("AV") == "Avianca"
+    assert providers.airline_display_name("ZZ") == "Aerolínea (ZZ)"
+    assert providers.airline_display_name("") == "Aerolínea no identificada"
